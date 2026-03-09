@@ -30,3 +30,17 @@ npm run dev
 - Move UI state to a dedicated store (e.g. Zustand).
 - Add unit tests for `src/core/physics.ts`.
 - Add import/export of scenario JSON.
+
+## Deploy to GitHub Pages
+
+This repo is configured to auto-deploy the web app from GitHub Actions.
+
+1. Push to `main`.
+2. In GitHub, open `Settings -> Pages`.
+3. Set `Source` to `GitHub Actions`.
+4. Wait for workflow `Deploy Web App to GitHub Pages` to finish.
+
+Notes:
+- The workflow file is `.github/workflows/deploy-pages.yml`.
+- It builds from `src/trefas_web_app` and publishes `src/trefas_web_app/dist`.
+- The Vite base path is set automatically to `/<repo-name>/` during deployment.
