@@ -15,7 +15,7 @@ const CURRENT_TICKS_A = [5, 10, 15, 20];
 const PERIOD_MS = 20;
 const MAX_PHASE_POWER_W = 2000;
 const MAX_DELTA_POWER_W = 3000;
-const IMAGE_URL = "/3fas.jpg";
+const IMAGE_URL = `${import.meta.env.BASE_URL}3fas.jpg`;
 const ROTATION_HZ = 0.3;
 const ROTATION_OMEGA = 2 * Math.PI * ROTATION_HZ;
 
