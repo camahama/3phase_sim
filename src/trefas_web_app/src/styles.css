@@ -1,0 +1,344 @@
+@import url("https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap");
+
+:root {
+  --bg-0: #0b1418;
+  --bg-1: #14262b;
+  --panel: rgba(15, 27, 33, 0.8);
+  --panel-border: rgba(140, 210, 218, 0.22);
+  --text: #e6f5f7;
+  --muted: #9fc3c9;
+  --accent: #80e9ff;
+  --accent-2: #ffd58c;
+  --shadow: rgba(0, 0, 0, 0.35);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  font-family: "Sora", sans-serif;
+  background:
+    radial-gradient(1200px 520px at 10% -20%, #25515b, transparent 60%),
+    radial-gradient(860px 420px at 90% 0%, #5b4830, transparent 65%),
+    linear-gradient(135deg, var(--bg-0), var(--bg-1));
+}
+
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1rem 1rem 1.2rem;
+}
+
+.hero-card {
+  background: linear-gradient(135deg, rgba(18, 35, 42, 0.92), rgba(23, 39, 44, 0.92));
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  padding: 0.9rem 1rem;
+  box-shadow: 0 14px 28px var(--shadow);
+  animation: rise-in 420ms ease-out;
+}
+
+.hero-card h1 {
+  margin: 0.1rem 0 0.35rem;
+  font-size: clamp(1.18rem, 1.7vw, 1.55rem);
+}
+
+.kicker {
+  margin: 0;
+  color: var(--accent-2);
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  font-size: 0.77rem;
+  font-weight: 700;
+}
+
+.hero-card p {
+  margin: 0;
+  color: var(--muted);
+  max-width: 84ch;
+  font-size: 0.88rem;
+}
+
+.panel-grid {
+  margin-top: 0.65rem;
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: repeat(12, 1fr);
+}
+
+.panel {
+  grid-column: span 4;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  padding: 0.75rem;
+  box-shadow: 0 10px 22px var(--shadow);
+  animation: rise-in 520ms ease-out both;
+}
+
+.panel-controls {
+  grid-column: span 12;
+}
+
+.panel-viz-combined {
+  grid-column: span 12;
+}
+
+.panel:nth-child(2) {
+  animation-delay: 60ms;
+}
+
+.panel:nth-child(3) {
+  animation-delay: 120ms;
+}
+
+.panel h2 {
+  margin: 0 0 0.45rem;
+  font-size: 0.92rem;
+}
+
+.controls-layout {
+  display: grid;
+  grid-template-columns: 1fr 1.35fr;
+  gap: 0.7rem;
+  align-items: start;
+}
+
+.circuit-image-wrap {
+  margin: 0;
+  border: 1px solid rgba(140, 210, 218, 0.18);
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(7, 16, 20, 0.9);
+  min-height: 320px;
+}
+
+.circuit-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.slider-row {
+  display: grid;
+  grid-template-columns: 112px 1fr 76px;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.35rem;
+}
+
+.slider-row span {
+  color: var(--muted);
+  font-size: 0.77rem;
+}
+
+.symbol-wrap sub,
+.name sub {
+  font-size: 0.74em;
+  vertical-align: sub;
+}
+
+.slider-row input {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.slider-row strong {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.77rem;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.reset-btn {
+  margin-top: 0.35rem;
+  border: 1px solid var(--panel-border);
+  background: rgba(10, 22, 26, 0.8);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 0.36rem 0.6rem;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.68rem;
+  cursor: pointer;
+}
+
+.scale-note {
+  margin: 0.8rem 0 0.45rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.current-strip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.current-chip {
+  border: 1px solid rgba(159, 195, 201, 0.22);
+  border-radius: 10px;
+  padding: 0.32rem 0.45rem;
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  gap: 0.35rem;
+  align-items: center;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+.instrument-strip {
+  margin-top: 0.5rem;
+  padding: 0.45rem;
+  border: 1px solid rgba(126, 198, 255, 0.24);
+  border-radius: 10px;
+  background: rgba(8, 16, 20, 0.82);
+  box-shadow: inset 0 0 0 1px rgba(126, 198, 255, 0.08);
+}
+
+.instrument-strip .current-chip {
+  border-color: rgba(126, 198, 255, 0.18);
+  background: rgba(5, 12, 16, 0.72);
+  color: #d7edf1;
+  font-size: 0.74rem;
+}
+
+.instrument-strip .current-chip .name {
+  color: #ffd58c;
+}
+
+.instrument-strip .current-chip .amp,
+.instrument-strip .current-chip .angle {
+  color: #d7edf1;
+}
+
+.current-chip.strong {
+  color: #fff0ac;
+  font-weight: 600;
+}
+
+.viz-svg {
+  width: 100%;
+  height: auto;
+  background: rgba(9, 18, 24, 0.7);
+  border: 1px solid rgba(140, 210, 218, 0.18);
+  border-radius: 14px;
+}
+
+.viz-svg.waveform {
+  aspect-ratio: 1 / 1;
+}
+
+.viz-svg.viz-linked {
+  aspect-ratio: 2.1 / 1;
+}
+
+.phasor-grid {
+  fill: none;
+  stroke: rgba(159, 195, 201, 0.24);
+  stroke-width: 1;
+}
+
+.phasor-axis {
+  stroke: rgba(159, 195, 201, 0.34);
+  stroke-width: 1;
+}
+
+.viz-label {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+}
+
+.viz-scale-label {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 10px;
+  fill: rgba(214, 235, 239, 0.72);
+}
+
+.phasor-dashed {
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+  opacity: 0.7;
+}
+
+.wave-grid {
+  stroke: rgba(214, 235, 239, 0.16);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+
+@keyframes rise-in {
+  from {
+    transform: translateY(14px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 900px) {
+  .panel {
+    grid-column: span 12;
+  }
+
+  .panel-controls {
+    grid-column: span 12;
+  }
+
+  .results {
+    grid-column: span 12;
+  }
+
+  .panel-viz {
+    grid-column: span 12;
+  }
+
+  .panel-viz-combined {
+    grid-column: span 12;
+  }
+
+  .slider-row {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .controls-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .circuit-image-wrap {
+    min-height: 220px;
+  }
+
+  .slider-row strong {
+    text-align: left;
+  }
+
+  .current-strip {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .instrument-strip .current-chip {
+    font-size: 0.7rem;
+  }
+
+  .viz-svg.waveform {
+    aspect-ratio: 1.4 / 1;
+  }
+
+  .viz-svg.viz-linked {
+    aspect-ratio: 1.25 / 1;
+  }
+}

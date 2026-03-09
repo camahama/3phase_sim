@@ -5,7 +5,7 @@ import sys
 import pygame
 
 from .gui import ThreePhaseGUI
-from .physics import ThreePhaseModel
+from .simulation import ThreePhaseModel
 
 
 def resource_path(relative_path):

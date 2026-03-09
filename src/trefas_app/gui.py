@@ -2,7 +2,7 @@ import math
 
 import pygame
 
-from .physics import BASE_PIXELS_PER_AMP, VOLTAGE_RMS
+from .simulation import BASE_CURRENT_SCALE, VOLTAGE_RMS
 
 # UI colors
 COLOR_BG = (15, 15, 20)
@@ -77,7 +77,7 @@ class ThreePhaseGUI:
         self.base_w = 1200
         self.base_h = 800
         self.scale = 1.0
-        self.pixels_per_amp = BASE_PIXELS_PER_AMP
+        self.pixels_per_amp = BASE_CURRENT_SCALE
 
         self.font_main = None
         self.font_small = None
@@ -116,8 +116,10 @@ class ThreePhaseGUI:
             print(f"Kunde inte ladda bild: {exc}")
 
     def _sync_model_from_sliders(self):
-        self.model.sliders_y = [s.val for s in self.sliders_y]
-        self.model.sliders_delta = [s.val for s in self.sliders_delta]
+        self.model.set_active_powers(
+            phase_powers_w=[s.val for s in self.sliders_y],
+            delta_powers_w=[s.val for s in self.sliders_delta],
+        )
         self.model.calculate_currents(self.pixels_per_amp)
 
     def update_layout(self, w, h):
@@ -126,7 +128,7 @@ class ThreePhaseGUI:
         scale_w = w / self.base_w
         scale_h = h / self.base_h
         self.scale = min(scale_w, scale_h)
-        self.pixels_per_amp = BASE_PIXELS_PER_AMP * self.scale
+        self.pixels_per_amp = BASE_CURRENT_SCALE * self.scale
 
         main_font_size = max(12, int(18 * self.scale))
         small_font_size = max(10, int(20 * self.scale))

@@ -1,83 +1,85 @@
 import cmath
 import math
 
-VOLTAGE_RMS = 230.0
-INITIAL_FREQ = 1
-MAX_FREQ = 5
-BASE_PIXELS_PER_AMP = 10.0
+def phase_voltages(voltage_rms):
+    """Return L1/L2/L3 phase-to-neutral voltages as complex RMS phasors."""
+    return (
+        voltage_rms * cmath.rect(1, 0),
+        voltage_rms * cmath.rect(1, -2 * math.pi / 3),
+        voltage_rms * cmath.rect(1, -4 * math.pi / 3),
+    )
 
 
-class ThreePhaseModel:
-    """Pure simulation state and electrical calculations."""
+def line_voltages(voltage_rms):
+    """Return V12/V23/V31 line-to-line voltages as complex RMS phasors."""
+    v1, v2, v3 = phase_voltages(voltage_rms)
+    return (v1 - v2, v2 - v3, v3 - v1)
 
-    def __init__(self):
-        self.time = 0.0
-        self.paused = False
-        self.current_freq = INITIAL_FREQ
-        self.max_freq = MAX_FREQ
 
-        self.sliders_y = [0.0, 0.0, 0.0]
-        self.sliders_delta = [0.0, 0.0, 0.0]
+def _safe_current(voltage, impedance):
+    """Return I = V/Z while handling open-circuit loads."""
+    if impedance is None:
+        return 0j
+    if abs(impedance) < 1e-12:
+        raise ValueError("Impedance magnitude must be > 0")
+    return voltage / impedance
 
-        self.line_currents_data = [(0.0, 0.0), (0.0, 0.0), (0.0, 0.0)]
-        self.neutral_current_data = (0.0, 0.0)
 
-    def update_time(self, dt):
-        if self.paused:
-            return
-        self.time += self.current_freq * dt
-        self.current_freq = min(self.current_freq, self.max_freq)
+def calculate_line_and_neutral_currents(
+    y_impedances,
+    delta_impedances=None,
+    voltage_rms=None,
+):
+    """Calculate line and neutral currents from complex Y and Delta impedances.
 
-    def reset_loads(self):
-        self.sliders_y = [0.0, 0.0, 0.0]
-        self.sliders_delta = [0.0, 0.0, 0.0]
+    Args:
+        y_impedances: Iterable with three complex impedances [Z1N, Z2N, Z3N].
+        delta_impedances: Optional iterable with three complex impedances
+            [Z12, Z23, Z31]. Use None for an open branch.
+        voltage_rms: Phase-to-neutral RMS voltage magnitude.
 
-    def toggle_pause(self):
-        if self.paused:
-            self.paused = False
-        else:
-            self.paused = True
-            self.time = 0.0
+    Returns:
+        tuple: (line_currents, neutral_current)
+            line_currents: (I1, I2, I3) complex RMS currents.
+            neutral_current: complex RMS current.
+    """
+    if voltage_rms is None:
+        raise ValueError("voltage_rms is required")
 
-    def calculate_currents(self, pixels_per_amp):
-        u_phase = [
-            cmath.rect(1, 0),
-            cmath.rect(1, -2 * math.pi / 3),
-            cmath.rect(1, -4 * math.pi / 3),
-        ]
-        u_line = [
-            cmath.rect(1, math.pi / 6),
-            cmath.rect(1, -math.pi / 2),
-            cmath.rect(1, -7 * math.pi / 6),
-        ]
+    if len(y_impedances) != 3:
+        raise ValueError("y_impedances must contain exactly three elements")
 
-        i_y = []
-        for i in range(3):
-            p = self.sliders_y[i]
-            mag = p / VOLTAGE_RMS
-            i_y.append(mag * u_phase[i])
+    if delta_impedances is None:
+        delta_impedances = (None, None, None)
+    if len(delta_impedances) != 3:
+        raise ValueError("delta_impedances must contain exactly three elements")
 
-        u_line_rms = VOLTAGE_RMS * math.sqrt(3)
-        i_d = []
-        for i in range(3):
-            p = self.sliders_delta[i]
-            mag = p / u_line_rms
-            i_d.append(mag * u_line[i])
+    vp = phase_voltages(voltage_rms)
+    vl = line_voltages(voltage_rms)
 
-        i_total = [
-            i_y[0] + i_d[0] - i_d[2],
-            i_y[1] + i_d[1] - i_d[0],
-            i_y[2] + i_d[2] - i_d[1],
-        ]
+    i_y = [
+        _safe_current(vp[idx], y_impedances[idx]) for idx in range(3)
+    ]
 
-        self.line_currents_data = []
-        for i_ph in i_total:
-            mag = abs(i_ph)
-            angle = cmath.phase(i_ph)
-            self.line_currents_data.append((mag * pixels_per_amp, angle))
+    i_delta = [
+        _safe_current(vl[idx], delta_impedances[idx]) for idx in range(3)
+    ]
 
-        i_n_vec = i_total[0] + i_total[1] + i_total[2]
-        self.neutral_current_data = (
-            abs(i_n_vec) * pixels_per_amp,
-            cmath.phase(i_n_vec),
-        )
+    i_line = (
+        i_y[0] + i_delta[0] - i_delta[2],
+        i_y[1] + i_delta[1] - i_delta[0],
+        i_y[2] + i_delta[2] - i_delta[1],
+    )
+    i_neutral = i_line[0] + i_line[1] + i_line[2]
+
+    return i_line, i_neutral
+
+
+def resistive_impedance_from_active_power(power_w, voltage_rms):
+    """Convert resistive active power to equivalent real impedance.
+
+    Returns None for power <= 0, which can be treated as an open branch.
+    """
+    if power_w <= 0:
+        return None
+    return (voltage_rms ** 2) / power_w
