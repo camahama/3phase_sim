@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3-Phase Simulator</title>
+    <style>
+        /* By AI agent Mima 2026-02-05 18:35:00: Basic styling for the web app */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #0f0f14; /* COLOR_BG from original */
+            color: #dcdcdc; /* COLOR_TEXT from original */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        h1, h2, h3 {
+            color: #969696; /* Slightly darker than COLOR_TEXT */
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+            max-width: 1200px; /* Base width from original */
+            margin-top: 20px;
+        }
+        .controls-panel {
+            flex: 1;
+            min-width: 300px;
+            max-width: 400px;
+            padding: 20px;
+            background-color: #1e1e24;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            margin: 10px;
+        }
+        .visualization-panel {
+            flex: 2;
+            min-width: 600px;
+            padding: 10px;
+            margin: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        canvas {
+            background-color: #1e1e24; /* Darker background for canvas */
+            border: 1px solid #404040;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 800px; /* Adjust as needed */
+            height: 500px; /* Adjust as needed */
+        }
+        .slider-group {
+            margin-bottom: 20px;
+        }
+        .slider-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-style: italic; /* For P labels */
+        }
+        .slider-group input[type="range"] {
+            width: calc(100% - 60px); /* Adjust for value display */
+            margin-right: 10px;
+            -webkit-appearance: none;
+            height: 10px;
+            border-radius: 5px;
+            background: #606060;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+        }
+        .slider-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #dcdcdc;
+            cursor: pointer;
+        }
+        .slider-group input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #dcdcdc;
+            cursor: pointer;
+        }
+        .slider-group .value-display {
+            display: inline-block;
+            width: 50px;
+            text-align: right;
+        }
+        .button-group {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 30px;
+        }
+        button {
+            background-color: #3c3c50; /* COLOR_BTN from original */
+            color: #dcdcdc;
+            border: 1px solid #969696;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #505064; /* COLOR_BTN_HOVER from original */
+        }
+        .current-display {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .current-display p {
+            margin: 5px 0;
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        .legend-item {
+            margin: 0 10px;
+            display: flex;
+            align-items: center;
+        }
+        .color-box {
+            width: 20px;
+            height: 10px;
+            margin-right: 5px;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+    <h1>3-Phase Power System Simulator</h1>
+    <div class="container">
+        <div class="controls-panel">
+            <h2>Adjust Load (W)</h2>
+            <div class="slider-columns">
+                <div style="float: left; width: 48%;">
+                    <h3>Line-to-Line (Δ)</h3>
+                    <div class="slider-group">
+                        <label for="p_delta_1">P<span style="font-size: 0.8em; vertical-align: sub;">12</span> (L1—L2): <span id="p_delta_1_val" class="value-display">0</span> W</label>
+                        <input type="range" id="p_delta_1" min="0" max="3000" step="10" value="0" data-color="#FFFF00">
+                    </div>
+                    <div class="slider-group">
+                        <label for="p_delta_2">P<span style="font-size: 0.8em; vertical-align: sub;">23</span> (L2—L3): <span id="p_delta_2_val" class="value-display">0</span> W</label>
+                        <input type="range" id="p_delta_2" min="0" max="3000" step="10" value="0" data-color="#FF00FF">
+                    </div>
+                    <div class="slider-group">
+                        <label for="p_delta_3">P<span style="font-size: 0.8em; vertical-align: sub;">31</span> (L3—L1): <span id="p_delta_3_val" class="value-display">0</span> W</label>
+                        <input type="range" id="p_delta_3" min="0" max="3000" step="10" value="0" data-color="#FFA500">
+                    </div>
+                </div>
+                <div style="float: right; width: 48%;">
+                    <h3>Phase-to-Neutral (Y)</h3>
+                    <div class="slider-group">
+                        <label for="p_y_1">P<span style="font-size: 0.8em; vertical-align: sub;">1</span> (L1—N): <span id="p_y_1_val" class="value-display">0</span> W</label>
+                        <input type="range" id="p_y_1" min="0" max="2000" step="10" value="0" data-color="#FF3232">
+                    </div>
+                    <div class="slider-group">
+                        <label for="p_y_2">P<span style="font-size: 0.8em; vertical-align: sub;">2</span> (L2—N): <span id="p_y_2_val" class="value-display">0</span> W</label>
+                        <input type="range" id="p_y_2" min="0" max="2000" step="10" value="0" data-color="#32C832">
+                    </div>
+                    <div class="slider-group">
+                        <label for="p_y_3">P<span style="font-size: 0.8em; vertical-align: sub;">3</span> (L3—N): <span id="p_y_3_val" class="value-display">0</span> W</label>
+                        <input type="range" id="p_y_3" min="0" max="2000" step="10" value="0" data-color="#3264FF">
+                    </div>
+                </div>
+                <div style="clear: both;"></div>
+            </div>
+            <div class="button-group">
+                <button id="resetButton">Reset All (0 W)</button>
+                <button id="toggleSimulationButton">Pause Simulation</button>
+            </div>
+            <div class="current-display">
+                <h3>Calculated Currents:</h3>
+                <p>I<span style="font-size: 0.8em; vertical-align: sub;">L1</span>: <span id="i_l1_mag">0.0</span> A <span id="i_l1_angle">0.0</span>°</p>
+                <p>I<span style="font-size: 0.8em; vertical-align: sub;">L2</span>: <span id="i_l2_mag">0.0</span> A <span id="i_l2_angle">0.0</span>°</p>
+                <p>I<span style="font-size: 0.8em; vertical-align: sub;">L3</span>: <span id="i_l3_mag">0.0</span> A <span id="i_l3_angle">0.0</span>°</p>
+                <p>I<span style="font-size: 0.8em; vertical-align: sub;">N</span>: <span id="i_n_mag">0.0</span> A <span id="i_n_angle">0.0</span>°</p>
+            </div>
+            <div class="legend">
+                <div class="legend-item"><span class="color-box" style="background-color: #FF3232;"></span>L1</div>
+                <div class="legend-item"><span class="color-box" style="background-color: #32C832;"></span>L2</div>
+                <div class="legend-item"><span class="color-box" style="background-color: #3264FF;"></span>L3</div>
+                <div class="legend-item"><span class="color-box" style="background-color: #FFFFFF;"></span>Neutral</div>
+                <div class="legend-item"><span class="color-box" style="background-color: #FFFF00;"></span>P12</div>
+                <div class="legend-item"><span class="color-box" style="background-color: #FF00FF;"></span>P23</div>
+                <div class="legend-item"><span class="color-box" style="background-color: #FFA500;"></span>P31</div>
+            </div>
+        </div>
+        <div class="visualization-panel">
+            <h2>Phasor Diagram & Sine Waves</h2>
+            <canvas id="simulationCanvas" width="800" height="500"></canvas>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
