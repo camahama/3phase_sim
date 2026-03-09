@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['src/trefas.py'],
+    ['src/trefas_app/launcher.py'],
     pathex=[],
     binaries=[],
     datas=[('assets/runtime/3fas.jpg', '.')],
