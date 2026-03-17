@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   angle,
+  calculateBranchCurrents,
   calculateLineAndNeutralCurrents,
   type Complex,
   magnitude,
@@ -28,6 +29,17 @@ const LOAD_COLORS = {
   p31: "#ff9b3d",
 };
 
+const IMAGE_SIZE = { width: 2809, height: 1859 };
+
+const LOAD_HOTSPOTS = [
+  { key: "p12", base: "I", sub: "12", left: 53.1, top: 23.7, width: 13.2, height: 9.2 },
+  { key: "p23", base: "I", sub: "23", left: 53.0, top: 43.5, width: 13.2, height: 9.2 },
+  { key: "p31", base: "I", sub: "31", left: 62.1, top: 51.6, width: 13.2, height: 9.2 },
+  { key: "p1", base: "I", sub: "1", left: 85.1, top: 34.2, width: 12.8, height: 9.0 },
+  { key: "p2", base: "I", sub: "2", left: 76.5, top: 60.5, width: 12.8, height: 9.0 },
+  { key: "p3", base: "I", sub: "3", left: 69.1, top: 76.9, width: 12.8, height: 9.0 },
+] as const;
+
 type Language = "en" | "sv";
 
 const UI_TEXT: Record<Language, {
@@ -53,6 +65,8 @@ const UI_TEXT: Record<Language, {
   imageAlt: string;
   linkedAriaLabel: string;
   languageToggle: string;
+  hoverCurrentPrefix: string;
+  hoverPhasePrefix: string;
 }> = {
   en: {
     kicker: "Three-Phase Web Prototype",
@@ -78,6 +92,8 @@ const UI_TEXT: Record<Language, {
     imageAlt: "Three-phase circuit diagram",
     linkedAriaLabel: "Linked phasor and waveform diagrams",
     languageToggle: "Svenska",
+    hoverCurrentPrefix: "Current",
+    hoverPhasePrefix: "Phase",
   },
   sv: {
     kicker: "Trefas web-prototyp",
@@ -103,6 +119,8 @@ const UI_TEXT: Record<Language, {
     imageAlt: "Kopplingsschema trefas",
     linkedAriaLabel: "L\u00e4nkade fasor- och v\u00e5gformsdiagram",
     languageToggle: "English",
+    hoverCurrentPrefix: "Ström",
+    hoverPhasePrefix: "Fas",
   },
 };
 
@@ -123,6 +141,8 @@ function deg(rad: number): number {
 }
 
 const FIXED_MAX_AMP = GRID_MAX_AMP;
+
+type LoadKey = keyof typeof LOAD_COLORS;
 
 export default function App() {
   const [language, setLanguage] = useState<Language>("en");
@@ -166,7 +186,7 @@ export default function App() {
     setIsRunning(true);
   }
 
-  const currents = useMemo(() => {
+  const { currents, branchCurrents } = useMemo(() => {
     const yImpedances: [Complex | null, Complex | null, Complex | null] = [
       resistiveImpedanceFromPower(p1, V_PHASE_RMS),
       resistiveImpedanceFromPower(p2, V_PHASE_RMS),
@@ -180,15 +200,30 @@ export default function App() {
       resistiveImpedanceFromPower(p31, vLineRms),
     ];
 
-    return calculateLineAndNeutralCurrents({
-      yImpedances,
-      deltaImpedances,
-      voltageRms: V_PHASE_RMS,
-    });
+    return {
+      currents: calculateLineAndNeutralCurrents({
+        yImpedances,
+        deltaImpedances,
+        voltageRms: V_PHASE_RMS,
+      }),
+      branchCurrents: calculateBranchCurrents({
+        yImpedances,
+        deltaImpedances,
+        voltageRms: V_PHASE_RMS,
+      }),
+    };
   }, [p1, p2, p3, p12, p23, p31]);
 
   const [i1, i2, i3] = currents.lineCurrents;
   const inNeutral = currents.neutralCurrent;
+  const loadCurrents: Record<LoadKey, Complex> = {
+    p1: branchCurrents.yBranchCurrents[0],
+    p2: branchCurrents.yBranchCurrents[1],
+    p3: branchCurrents.yBranchCurrents[2],
+    p12: branchCurrents.deltaBranchCurrents[0],
+    p23: branchCurrents.deltaBranchCurrents[1],
+    p31: branchCurrents.deltaBranchCurrents[2],
+  };
 
   function resetLoads(): void {
     setP1(0);
@@ -238,16 +273,39 @@ export default function App() {
               </div>
             </div>
 
-            <figure className="circuit-image-wrap">
+            <figure
+              className="circuit-image-wrap"
+              style={
+                {
+                  "--image-width": String(IMAGE_SIZE.width),
+                  "--image-height": String(IMAGE_SIZE.height),
+                } as React.CSSProperties
+              }
+            >
               <img src={IMAGE_URL} alt={text.imageAlt} className="circuit-image" />
+              {LOAD_HOTSPOTS.map((hotspot) => (
+                <LoadHotspot
+                  key={hotspot.key}
+                  current={loadCurrents[hotspot.key]}
+                  color={LOAD_COLORS[hotspot.key]}
+                  base={hotspot.base}
+                  sub={hotspot.sub}
+                  left={hotspot.left}
+                  top={hotspot.top}
+                  width={hotspot.width}
+                  height={hotspot.height}
+                  text={text}
+                  language={language}
+                />
+              ))}
             </figure>
           </div>
         </article>
 
         <article className="panel panel-viz-combined">
           <h2>{text.linkedHeading}</h2>
-          <LinkedDiagrams currents={[i1, i2, i3, inNeutral]} maxAmp={FIXED_MAX_AMP} timePhase={timePhase} text={text} />
-          <div className="viz-controls">
+          <div className="viz-stage">
+            <LinkedDiagrams currents={[i1, i2, i3, inNeutral]} maxAmp={FIXED_MAX_AMP} timePhase={timePhase} text={text} />
             <button type="button" className="run-btn" onClick={handleRunToggle}>
               {isRunning ? text.stopTime : text.startTime}
             </button>
@@ -255,6 +313,46 @@ export default function App() {
         </article>
       </section>
     </main>
+  );
+}
+
+function LoadHotspot(props: {
+  current: Complex;
+  color: string;
+  base: string;
+  sub: string;
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+  text: (typeof UI_TEXT)[Language];
+  language: Language;
+}) {
+  return (
+    <button
+      type="button"
+      className="load-hotspot"
+      style={
+        {
+          "--load-left": `${props.left}%`,
+          "--load-top": `${props.top}%`,
+          "--load-width": `${props.width}%`,
+          "--load-height": `${props.height}%`,
+          "--load-color": props.color,
+        } as React.CSSProperties
+      }
+      aria-label={`${props.text.hoverCurrentPrefix} I${props.sub}`}
+    >
+      <span className="sr-only">{`${props.text.hoverCurrentPrefix} I${props.sub}`}</span>
+      <span className="load-tooltip">
+        <span className="load-tooltip-title">
+          <em>{props.base}</em>
+          <sub>{props.sub}</sub>
+        </span>
+        <span>{props.text.hoverCurrentPrefix}: {ampLabel(magnitude(props.current), props.text, props.language)}</span>
+        <span>{props.text.hoverPhasePrefix}: {formatDecimal(deg(angle(props.current)), 1, props.language)}°</span>
+      </span>
+    </button>
   );
 }
 

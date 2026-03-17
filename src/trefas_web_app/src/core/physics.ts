@@ -5,6 +5,11 @@ export type ThreePhaseCurrentResult = {
   neutralCurrent: Complex;
 };
 
+export type BranchCurrentResult = {
+  yBranchCurrents: [Complex, Complex, Complex];
+  deltaBranchCurrents: [Complex, Complex, Complex];
+};
+
 const EPS = 1e-12;
 
 export function complex(re: number, im = 0): Complex {
@@ -90,6 +95,31 @@ export function calculateLineAndNeutralCurrents(args: {
   return {
     lineCurrents: [i1, i2, i3],
     neutralCurrent: inNeutral,
+  };
+}
+
+export function calculateBranchCurrents(args: {
+  yImpedances: [Complex | null, Complex | null, Complex | null];
+  deltaImpedances?: [Complex | null, Complex | null, Complex | null];
+  voltageRms: number;
+}): BranchCurrentResult {
+  const { yImpedances, voltageRms } = args;
+  const deltaImpedances = args.deltaImpedances ?? [null, null, null];
+
+  const vp = phaseVoltages(voltageRms);
+  const vl = lineVoltages(voltageRms);
+
+  return {
+    yBranchCurrents: [
+      currentFromBranch(vp[0], yImpedances[0]),
+      currentFromBranch(vp[1], yImpedances[1]),
+      currentFromBranch(vp[2], yImpedances[2]),
+    ],
+    deltaBranchCurrents: [
+      currentFromBranch(vl[0], deltaImpedances[0]),
+      currentFromBranch(vl[1], deltaImpedances[1]),
+      currentFromBranch(vl[2], deltaImpedances[2]),
+    ],
   };
 }
 
